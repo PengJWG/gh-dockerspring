@@ -78,4 +78,4 @@ jobs:
 
       - name: Docker push
         run: |
-          docker push pengl/pengl-maven:${{ needs.build.outputs.jar-.file }}
+          docker push pengl/pengl-maven:docker-helloworld
