@@ -1,0 +1,81 @@
+name: CI/CD Pipeline
+on:
+  #Manually trigger workflow runs
+  workflow_dispatch:
+  #Trigger the workflow on push from the main branch
+  push:
+    branches:
+      - main
+jobs:
+  #Test's job
+  tests:
+    name: Unit tests
+    #Run on Ubuntu using the latest version
+    runs-on: ubuntu-latest
+    #Job's steps
+    steps:
+      #Check-out your repository under $GITHUB_WORKSPACE, so your workflow can access it
+      - name: Code checkout
+        uses: actions/checkout@v3
+      #Set up JDK 17
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'maven'
+      #Run Tests
+      - name: Run Tests
+        run: mvn -B test
+  #Run Build using Maven
+  build:
+    needs: tests
+    runs-on: ubuntu-latest
+    outputs:
+      jar-file: ${{ steps.publishedJarName.outputs.jar-file }}
+    steps:
+      - name: Get code
+        uses: actions/checkout@v3
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'maven'
+      - name: Run Build with Maven
+        run: mvn -B package -DskipTests --file pom.xml
+      - name: Publish jar-filename for available in other jobs
+        id: publishedJarName
+        run: find target/*.jar -type f -execdir echo 'jar-file={}' >> $GITHUB_OUTPUT ';'
+      #Upload artifacts, canbe downloaded manually from Github repo
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: dist-files
+          path: |
+            target/*.jar
+  #Deploy Job
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get build artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: dist-files
+      - name: Output contents
+        run: ls
+      - name: Output jar filename
+        run: echo "${{ needs.build.outputs.jar-file }}"
+      - name: Docker build
+        run: |
+          docker build . -t pengl/pengl-maven:${{ needs.build.outputs.jar-file }}
+      - name: Login to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Docker push
+        run: |
+          docker push pengl/pengl-maven:${{ needs.build.outputs.jar-.file }}
