@@ -69,7 +69,7 @@ jobs:
         run: echo "${{ needs.build.outputs.jar-file }}"
       - name: Docker build
         run: |
-          docker build . -t pengl/pengl-maven:${{ needs.build.outputs.jar-file }}
+          docker build . -t pengl/pengl-maven:docker-helloworld
       - name: Login to DockerHub
         uses: docker/login-action@v2
         with:
