@@ -53,7 +53,7 @@ jobs:
         with:
           name: dist-files
           path: |
-            target/*.jar
+            target/
   #Deploy Job
   deploy:
     needs: build
@@ -63,6 +63,7 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: dist-files
+          path: target/
       - name: Output contents
         run: ls
       - name: Output jar filename
