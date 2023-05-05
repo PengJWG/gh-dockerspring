@@ -54,6 +54,10 @@ jobs:
           name: dist-files
           path: |
             target/
+      - name: Docker build
+        run: |
+          docker build . -t pengl/pengl-maven:docker-helloworld
+          ls
   #Deploy Job
   deploy:
     needs: build
