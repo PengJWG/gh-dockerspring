@@ -59,14 +59,9 @@ jobs:
         run: |
           docker build . -t pengl/pengl-maven:docker-helloworld
           ls
-      - name: Login to DockerHub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-      - name: Docker push
-        run: |
-          docker push pengl/pengl-maven:docker-helloworld
+      - name: Publish docker-filename for available in other jobs
+        id: publishedDockerFile
+        run: find *pengl-maven:docker-helloworld* -type f -execdir echo 'docker-file={}' >> $GITHUB_OUTPUT ';'
   #Deploy Job
   deploy:
     needs: build
